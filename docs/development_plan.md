@@ -187,9 +187,9 @@ Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8；Phase 4 前置引入 b
 | Phase 5 bats 体系（23 用例绿） | ✅ 完成 | commit c03163c |
 | Phase 6 gen-docs + CI | ✅ 完成 | commit 7912f7b |
 | Phase 7 VSCode 配置 | ✅ 完成 | 插件已由用户手动安装 |
-| 闸门 A：bash_env_check 手动验证 | ⏳ 待用户 | 清单见下 |
-| 闸门 B：Stage 1 本地全绿确认 | ⏳ 待用户 | make check 已绿 |
-| 闸门 C：Stage 2（GitHub Actions） | ⏳ 待用户 | 配置远端并 push 后自动触发 |
+| 闸门 A：bash_env_check 手动验证 | ✅ 用户通过 | 2026-10-30 |
+| 闸门 B：Stage 1 本地全绿确认 | ✅ 用户通过 | 2026-10-30 |
+| 闸门 C：Stage 2（GitHub Actions） | ✅ 通过 | run 40944634779 绿；runner=Ubuntu 26.04.1 bash 5.3.9；发现 runner 用户不在 sudo/wheel 组（sudoers.d 单独授权），sudo-nopasswd 测试已按「函数级必跑 + CLI 组前提 skip」解耦 |
 | 闸门 D：Stage 3（git bash） | ⏳ 待用户 | 克隆到 Windows 执行 ./run_tests.sh |
 
 ### 闸门 A：bash_env_check 手动验证清单

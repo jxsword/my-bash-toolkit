@@ -6,9 +6,11 @@
 
 | 环境 | bash 版本（实测） | 测试阶段 | 状态 |
 |---|---|---|---|
-| WSL Ubuntu 26.04.1（基准环境） | 5.3.9（2026-10-30 实测） | Stage 1 | ✅ 基准 |
-| Ubuntu 26.04（含 GitHub Actions ubuntu-26.04 runner） | CI 首跑回填 | Stage 2 | 待回填 |
+| WSL Ubuntu 26.04.1（基准环境） | 5.3.9（2026-10-30 实测） | Stage 1 | ✅ 通过 |
+| Ubuntu 26.04（GitHub Actions ubuntu-26.04 runner） | 5.3.9（2026-10-30 CI 实测） | Stage 2 | ✅ 通过 |
 | Windows Git Bash（Git for Windows） | 待实测（要求 ≥5.2） | Stage 3 | 待手动测试 |
+
+注：GitHub runner 用户的免密 sudo 由 /etc/sudoers.d 单独授权、**不在 sudo/wheel 组**，涉及用户组前提的用例在 CI 上自动 skip（函数级用例仍全覆盖）。
 
 - 版本区间锁定于根目录 `.bash-version`（语义化 MIN-MAX，端点含，双向硬阻断）：当前 `5.2.0-5.3.9`。越界运行/测试会被 `bash_env_check` 阻断；新 bash 版本需重测通过后更新该文件放行（checklist 见 `docs/bash_env_and_doc_spec.md` §8）。
 - 手动检查当前环境：
