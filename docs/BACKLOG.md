@@ -14,7 +14,7 @@
 | BL-004 | scripts/system/sysinfo.sh | ubuntu, wsl | 否 | 3 | ✅ |
 | BL-005 | scripts/system/pkg-export.sh | ubuntu, wsl | 否 | 3 | ✅ |
 | BL-006 | scripts/text/jsonq.sh | 三环境 | 否 | 2 | ✅ |
-| BL-007 | scripts/text/log-grep.sh | 三环境 | 否 | 3 | 待开发 |
+| BL-007 | scripts/text/log-grep.sh | 三环境 | 否 | 3 | ✅ |
 | BL-008 | scripts/files/dedup.sh | 三环境 | 否 | 2 | ✅ |
 | BL-009 | scripts/files/bulk-rename.sh | 三环境 | 否 | 2 | ✅ |
 | BL-010 | scripts/net/port-check.sh | ubuntu, wsl | 否 | 2 | ✅ |
