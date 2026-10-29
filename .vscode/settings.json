@@ -1,0 +1,9 @@
+{
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt",
+    "editor.formatOnSave": true
+  },
+  "shellcheck.enable": true,
+  "shellcheck.useWSL": false,
+  "shfmt.args": ["-i", "2", "-ci", "-bn", "-sr"]
+}

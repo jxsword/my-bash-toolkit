@@ -1,7 +1,7 @@
 # my-bash-toolkit 开发计划
 
-- 状态: v3 定稿（已获批执行）
-- 生成日期: 2026-10-30（v1 规划 → v2 两轮复审 → v3 需求修订）
+- 状态: v3 已实施（本地可执行部分完成；三环境人工闸门待用户）
+- 生成日期: 2026-10-30（v1 规划 → v2 两轮复审 → v3 需求修订 → 实施完成）
 - 决策依据: docs/decision_log.md（DR-001 ~ DR-007）
 - 实施规格: docs/bash_env_and_doc_spec.md（.bash-version、env 检测、tag 与文档抽取）
 
@@ -180,9 +180,34 @@ Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8；Phase 4 前置引入 b
 
 | 阶段 | 状态 | 备注 |
 |---|---|---|
-| v3 计划文档落盘 | 进行中 | DR-005/006/007 |
-| Phase 0-8 | 待执行 | 按本计划顺序 |
-| 闸门 A：bash_env_check 手动验证 | 待用户 | Phase 5 交付后 |
-| 闸门 B：Stage 1 本地全绿确认 | 待用户 | Phase 8 后 |
-| 闸门 C：Stage 2（GitHub Actions） | 待用户 | 需先配置远端并推送 |
-| 闸门 D：Stage 3（git bash） | 待用户 | 用户克隆到 Windows 批量执行 |
+| v3 计划文档落盘 | ✅ 完成 | commit 920fabe |
+| Phase 0-2 骨架与规范基座 | ✅ 完成 | commit b3fc7e3 |
+| Phase 3 门禁（severity=style 实测校准） | ✅ 完成 | commit 96d9381 |
+| Phase 4 rules_check_test（11/11 绿） | ✅ 完成 | commit 0421962 |
+| Phase 5 bats 体系（23 用例绿） | ✅ 完成 | commit c03163c |
+| Phase 6 gen-docs + CI | ✅ 完成 | commit 7912f7b |
+| Phase 7 VSCode 配置 | ✅ 完成 | 插件已由用户手动安装 |
+| 闸门 A：bash_env_check 手动验证 | ⏳ 待用户 | 清单见下 |
+| 闸门 B：Stage 1 本地全绿确认 | ⏳ 待用户 | make check 已绿 |
+| 闸门 C：Stage 2（GitHub Actions） | ⏳ 待用户 | 配置远端并 push 后自动触发 |
+| 闸门 D：Stage 3（git bash） | ⏳ 待用户 | 克隆到 Windows 执行 ./run_tests.sh |
+
+### 闸门 A：bash_env_check 手动验证清单
+
+```bash
+# 1) 正常路径：应输出 platform=wsl id=wsl-ubuntu-26.04 bash=5.3.9 verdict=OK，退出 0
+./scripts/lib/env.sh
+
+# 2) 高于 MAX：应输出 TOO_NEW，退出 1
+RV="$(mktemp)"; printf '5.2.0-5.3.3\n' > "$RV"
+BASH_VERSION_FILE="$RV" ./scripts/lib/env.sh; echo "exit=$?（期望 1）"
+
+# 3) 低于 MIN：应输出 TOO_OLD，退出 1
+printf '5.4.0-5.5.0\n' > "$RV"
+BASH_VERSION_FILE="$RV" ./scripts/lib/env.sh; echo "exit=$?（期望 1）"
+
+# 4) 非法格式：退出 2
+printf 'garbage\n' > "$RV"
+BASH_VERSION_FILE="$RV" ./scripts/lib/env.sh; echo "exit=$?（期望 2）"
+rm -f "$RV"
+```

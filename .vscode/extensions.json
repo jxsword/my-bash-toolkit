@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "mkhl.shfmt",
+    "timonwong.shellcheck",
+    "jetmartin.bats",
+    "EditorConfig.EditorConfig",
+    "rogalmic.bash-debug"
+  ]
+}
