@@ -17,7 +17,7 @@
 | BL-007 | scripts/text/log-grep.sh | 三环境 | 否 | 3 | 待开发 |
 | BL-008 | scripts/files/dedup.sh | 三环境 | 否 | 2 | ✅ |
 | BL-009 | scripts/files/bulk-rename.sh | 三环境 | 否 | 2 | ✅ |
-| BL-010 | scripts/net/port-check.sh | ubuntu, wsl | 否 | 2 | 待开发 |
+| BL-010 | scripts/net/port-check.sh | ubuntu, wsl | 否 | 2 | ✅ |
 | BL-011 | scripts/net/http-probe.sh | 三环境 | 否 | 3 | 待开发 |
 | BL-012 | scripts/ops/backup-dir.sh | ubuntu, wsl | **是** | 3 | 待开发 |
 | BL-013 | scripts/ops/disk-alert.sh | ubuntu, wsl | 否 | 3 | 待开发 |
