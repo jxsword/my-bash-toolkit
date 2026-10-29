@@ -25,7 +25,7 @@ validate_user() {
     echo "错误: 用户名 '$user' 格式非法" >&2
     return 1
   fi
-  if ! id "$user" >/dev/null 2>&1; then
+  if ! id "$user" > /dev/null 2>&1; then
     echo "错误: 用户 '$user' 不存在" >&2
     return 1
   fi
@@ -62,9 +62,9 @@ enable_nopasswd() {
   check_includedir || return 1
   tmp_file="${sudoers_file}.tmp"
   echo "$user ALL=(ALL) NOPASSWD: ALL" \
-    | sudo tee "$tmp_file" >/dev/null || return 1
+    | sudo tee "$tmp_file" > /dev/null || return 1
   sudo chmod 440 "$tmp_file"
-  if sudo visudo -c -f "$tmp_file" >/dev/null 2>&1; then
+  if sudo visudo -c -f "$tmp_file" > /dev/null 2>&1; then
     sudo mv "$tmp_file" "$sudoers_file"
     echo "已为 $user 开启 sudo 免密"
   else
@@ -117,12 +117,18 @@ main() {
   for arg in "$@"; do
     case "$arg" in
       -n | --dry-run) dry="true" ;;
-      *) usage; return 2 ;;
+      *)
+        usage
+        return 2
+        ;;
     esac
   done
   case "$mode" in
     on | off | status) ;;
-    *) usage; return 2 ;;
+    *)
+      usage
+      return 2
+      ;;
   esac
   user="${user:-$(id -un)}"
   validate_user "$user" || return 1

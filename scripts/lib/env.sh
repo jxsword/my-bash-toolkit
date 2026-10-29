@@ -39,7 +39,7 @@ env_detect_platform() {
     return 0
   fi
   if [[ -r /proc/version ]] \
-    && grep -qi microsoft /proc/version 2>/dev/null; then
+    && grep -qi microsoft /proc/version 2> /dev/null; then
     printf 'wsl\n'
     return 0
   fi
@@ -101,10 +101,11 @@ env_bash_version() {
 # env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
 # fn: 解析 .bash-version 到 _ENV_MIN/_ENV_MAX；格式非法返回 2
 env_parse_range() {
-  local file="$1" line
+  local file="$1" line re
   line="$(grep -v '^[[:space:]]*#' "$file" \
     | grep -v '^[[:space:]]*$' | head -n1 | tr -d '[:space:]')"
-  if ! [[ "$line" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+  re='^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[0-9]+\.[0-9]+)$'
+  if ! [[ "$line" =~ $re ]]; then
     return 2
   fi
   _ENV_MIN="${BASH_REMATCH[1]}"
@@ -136,7 +137,7 @@ bash_env_check() {
   local cur_platform cur_id cur_distro="unknown" cmp
   file="$(env_version_file)" || {
     [[ "$quiet" == "false" ]] \
-      && echo "错误: 找不到 .bash-version（可用 BASH_VERSION_FILE 指定）" >&2
+      && echo "错误: 找不到 .bash-version（可设 BASH_VERSION_FILE）" >&2
     return 2
   }
   _ENV_MIN="" _ENV_MAX=""

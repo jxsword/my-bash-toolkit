@@ -1,0 +1,34 @@
+# 本地 hook 使用系统安装的 shfmt/shellcheck（版本要求见 README §2）。
+# 选择 system 二进制而非 scop/pre-commit-shfmt：避免 golang 首跑构建，速度与确定性优先。
+# rev 参考值 2026-10-30，可用 pre-commit autoupdate 校准。
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+  - repo: local
+    hooks:
+      - id: shfmt-check
+        name: shfmt (format check -i 2 -ci -bn -sr)
+        entry: shfmt -d -i 2 -ci -bn -sr
+        language: system
+        types: [shell]
+      - id: shellcheck
+        name: shellcheck (severity=warning via .shellcheckrc)
+        entry: shellcheck
+        language: system
+        types: [shell]
+      - id: line-length
+        name: line-length (<=80 columns)
+        entry: hooks/line-length.sh
+        language: system
+        types: [shell]
+      - id: check-metadata
+        name: header tags & function env annotations
+        entry: hooks/check-metadata.sh
+        language: system
+        types: [shell]
+        exclude: ^rules_check_test/bad/
