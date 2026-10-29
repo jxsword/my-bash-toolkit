@@ -21,7 +21,7 @@
 - 仓库: https://github.com/jxsword/my-bash-toolkit （public，main，GitHub Flow）
 - 测试状态: **三环境全部通过**——Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9，26 用例）、Stage 2 GitHub Actions ubuntu-26.04（bash 5.3.9，CI 绿）、Stage 3 Windows Git Bash（bash 5.2.37，13 执行 + 13 skip 亲测通过）。
 - 人工闸门 A-D 已全部关闭（详见 development_plan §10）。
-- 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。
+- 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。BL-001 mkscript 已完成（2026-10-30），后续新脚本可用它生成规范骨架。
 
 ## 2. 决策摘要（详见 docs/decision_log.md）
 
