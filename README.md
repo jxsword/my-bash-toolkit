@@ -8,7 +8,7 @@
 |---|---|---|---|
 | WSL Ubuntu 26.04.1（基准环境） | 5.3.9（2026-10-30 实测） | Stage 1 | ✅ 通过 |
 | Ubuntu 26.04（GitHub Actions ubuntu-26.04 runner） | 5.3.9（2026-10-30 CI 实测） | Stage 2 | ✅ 通过 |
-| Windows Git Bash（Git for Windows） | 待实测（要求 ≥5.2） | Stage 3 | 待手动测试 |
+| Windows Git Bash（Git for Windows） | 5.2.37（2026-10-30 实测） | Stage 3 | ✅ 通过 |
 
 注：GitHub runner 用户的免密 sudo 由 /etc/sudoers.d 单独授权、**不在 sudo/wheel 组**，涉及用户组前提的用例在 CI 上自动 skip（函数级用例仍全覆盖）。
 
@@ -86,4 +86,4 @@ make doctor       # 打印工具链版本
 
 - 分支模型：GitHub Flow——main + 短生命周期 feature 分支，合并前过门禁与测试（DR-002）。
 - 提交信息：决策类改动在正文末尾附 `Decision: DR-编号`。
-- 文档：[开发计划](docs/development_plan.md) · [决策记录](docs/decision_log.md) · [测试框架对比](docs/bash_test_framework_comparison.md) · [环境与文档规格](docs/bash_env_and_doc_spec.md) · [脚本文档（生成物）](docs/SCRIPTS.md)
+- 文档：**[PROJECT_CONTEXT（新会话上下文总入口，先读）](docs/PROJECT_CONTEXT.md)** · [开发计划](docs/development_plan.md) · [决策记录](docs/decision_log.md) · [测试框架对比](docs/bash_test_framework_comparison.md) · [环境与文档规格](docs/bash_env_and_doc_spec.md) · [脚本文档（生成物）](docs/SCRIPTS.md)

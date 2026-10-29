@@ -1,7 +1,7 @@
 # my-bash-toolkit 开发计划
 
-- 状态: v3 已实施（本地可执行部分完成；三环境人工闸门待用户）
-- 生成日期: 2026-10-30（v1 规划 → v2 两轮复审 → v3 需求修订 → 实施完成）
+- 状态: 三环境闭环完成，进入脚本开发期
+- 生成日期: 2026-10-30（v1 规划 → v2 两轮复审 → v3 需求修订 → 实施 → 三环境测试闭环）
 - 决策依据: docs/decision_log.md（DR-001 ~ DR-007）
 - 实施规格: docs/bash_env_and_doc_spec.md（.bash-version、env 检测、tag 与文档抽取）
 
@@ -190,7 +190,7 @@ Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8；Phase 4 前置引入 b
 | 闸门 A：bash_env_check 手动验证 | ✅ 用户通过 | 2026-10-30 |
 | 闸门 B：Stage 1 本地全绿确认 | ✅ 用户通过 | 2026-10-30 |
 | 闸门 C：Stage 2（GitHub Actions） | ✅ 通过 | run 40944634779 绿；runner=Ubuntu 26.04.1 bash 5.3.9；发现 runner 用户不在 sudo/wheel 组（sudoers.d 单独授权），sudo-nopasswd 测试已按「函数级必跑 + CLI 组前提 skip」解耦 |
-| 闸门 D：Stage 3（git bash） | ⏳ 待用户 | 克隆到 Windows 执行 ./run_tests.sh |
+| 闸门 D：Stage 3（git bash） | ✅ 用户亲测通过 | bash 5.2.37；13 执行 + 13 skip 全绿（shfmt/shellcheck 可选，rules 回归按能力 skip）；测试修复：边界用例动态化、环境跳过条件加载 |
 
 ### 闸门 A：bash_env_check 手动验证清单
 
