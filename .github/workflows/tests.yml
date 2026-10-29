@@ -15,9 +15,11 @@ jobs:
       - name: 安装工具链
         run: |
           sudo apt-get update
-          sudo apt-get install -y bats shfmt shellcheck
-          python3 -m pip install --user pre-commit
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          if ! sudo apt-get install -y bats shfmt shellcheck pre-commit; then
+            sudo apt-get install -y bats shfmt shellcheck
+            python3 -m pip install --user --break-system-packages pre-commit
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
       - name: bash 环境预检（.bash-version 判定）
         run: scripts/lib/env.sh
       - name: pre-commit 全量检查
