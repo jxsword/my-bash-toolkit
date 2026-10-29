@@ -21,7 +21,7 @@
 - 仓库: https://github.com/jxsword/my-bash-toolkit （public，main，GitHub Flow）
 - 测试状态: **三环境全部通过**——Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9，26 用例）、Stage 2 GitHub Actions ubuntu-26.04（bash 5.3.9，CI 绿）、Stage 3 Windows Git Bash（bash 5.2.37，13 执行 + 13 skip 亲测通过）。
 - 人工闸门 A-D 已全部关闭（详见 development_plan §10）。
-- 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。BL-001 mkscript（2026-10-30）、BL-002 git-wip（2026-10-30）、BL-003 env-dump（2026-10-30）与 BL-006 jsonq（2026-10-30）已完成，后续新脚本可用 mkscript 生成规范骨架。
+- 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。BL-001 mkscript（2026-10-30）、BL-002 git-wip（2026-10-30）、BL-003 env-dump（2026-10-30）、BL-006 jsonq（2026-10-30）与 BL-008 dedup（2026-10-30）已完成，后续新脚本可用 mkscript 生成规范骨架。
 
 ## 2. 决策摘要（详见 docs/decision_log.md）
 
@@ -129,6 +129,7 @@ setup() {
 | 6 | Windows 普通克隆缺子模块，load bats-assert 报错 | README 克隆命令带 --recurse-submodules；run_tests.sh 预检提示 |
 | 7 | golden 输出与工具版本耦合，升级即碎 | run_checks 归一化关键行比对；工具升级按 spec §8 checklist 复核 |
 | 8 | GH runner 组前提 / /mnt/c（DrvFs）权限语义 | 测试两层拆分（函数级必跑 + CLI 组前提 skip）；沙箱不设 /mnt/*、仓库保持 ext4 |
+| 9 | bash 5.3 实测：`arr[$k]+="${arr[$k]:-}x"` 自引用追加会把值翻倍（dedup 开发踩中）；`wc -l <<< "$str"` 因 herestring 追加换行恒多计 1 | 关联数组累积一律用整体赋值 `arr[$k]="${arr[$k]:-}…"`；计数用 `printf '%s' "$str" \| wc -l`，不用 herestring |
 
 ## 10. 常用命令速查
 
