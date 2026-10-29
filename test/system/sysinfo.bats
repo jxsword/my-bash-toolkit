@@ -56,10 +56,12 @@ setup() {
   run "$SCRIPT"
   [ "$status" -eq 0 ]
   local after
+  local re='[a-zA-Z0-9@._-]+\.(service|timer|socket|mount|target'
+  re="${re}|path|slice|scope|swap|automount|device)"
   after="${output#*== systemd 失败单元 ==}"
   [[ "$after" == *"（无失败单元）"* ]] \
     || [[ "$after" == *"（systemd 不可用，已降级跳过）"* ]] \
-    || [[ "$after" == *".service"* ]]
+    || [[ "$after" =~ $re ]]
 }
 
 @test "最近登录段有内容或降级说明，不崩溃" {
