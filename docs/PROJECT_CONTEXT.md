@@ -9,6 +9,8 @@
   「先读 docs/PROJECT_CONTEXT.md 和 AGENTS.md，按脚本引入 SOP 全流程开发新脚本：〈需求描述〉」
 - **改造已有脚本**：
   「先读 docs/PROJECT_CONTEXT.md 和 AGENTS.md，我提供已有脚本，按 SOP 规范改造并补测试：〈粘贴脚本〉」
+- **开发队列中的脚本**（队列见 docs/BACKLOG.md）：
+  「先读 docs/PROJECT_CONTEXT.md、docs/BACKLOG.md 和 AGENTS.md，按 SOP 全流程开发 BL-XXX〈脚本名〉」
 
 读完本文件后，按 §3 文档链补齐规范细节，再按 §8 SOP 开工。
 
@@ -19,7 +21,7 @@
 - 仓库: https://github.com/jxsword/my-bash-toolkit （public，main，GitHub Flow）
 - 测试状态: **三环境全部通过**——Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9，26 用例）、Stage 2 GitHub Actions ubuntu-26.04（bash 5.3.9，CI 绿）、Stage 3 Windows Git Bash（bash 5.2.37，13 执行 + 13 skip 亲测通过）。
 - 人工闸门 A-D 已全部关闭（详见 development_plan §10）。
-- 项目阶段: 三环境闭环完成，**进入脚本开发期**——后续工作 = 按引入 SOP 持续添加脚本。
+- 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。
 
 ## 2. 决策摘要（详见 docs/decision_log.md）
 
@@ -41,6 +43,7 @@
 5. `docs/decision_log.md` —— 决策全文（含被否选项与理由）
 6. `docs/bash_test_framework_comparison.md` —— 5 框架实测对比
 7. `docs/SCRIPTS.md` —— 现有脚本功能总览（**生成物，禁止手改**）
+8. `docs/BACKLOG.md` —— 脚本开发队列（已立项任务从这里取）
 
 ## 4. 硬约束速查（违反 = 提交被拦或流程违规）
 
