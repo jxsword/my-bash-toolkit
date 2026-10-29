@@ -27,6 +27,10 @@ main() {
     echo "run_tests: 未找到 bats（安装方式见 README §4）" >&2
     return 2
   fi
+  if [[ ! -e "$_ROOT/test/libs/bats-support/load.bash" ]]; then
+    echo "run_tests: 提示——bats 助手库子模块未初始化，依赖它的用例将失败" >&2
+    echo "  执行: git submodule update --init --recursive" >&2
+  fi
   local files=()
   mapfile -t files < <(
     find "$_ROOT/test" -name '*.bats' -not -path '*/libs/*' | sort

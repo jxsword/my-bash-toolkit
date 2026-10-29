@@ -8,8 +8,12 @@
 
 setup() {
   load '../helpers/test_env'
-  load '../../test/libs/bats-support/load'
-  load '../../test/libs/bats-assert/load'
+  # 环境跳过优先，且可选组件条件加载：bats 的 setup 内 skip 不会中断
+  # 后续语句，故用 if 守卫，保证 git bash（未初始化子模块）也能整体 skip
+  if env_is_supported ubuntu-26.04 wsl-ubuntu-26.04; then
+    load '../../test/libs/bats-support/load'
+    load '../../test/libs/bats-assert/load'
+  fi
   skip_unless_env ubuntu-26.04 wsl-ubuntu-26.04
   SCRIPT="$BATS_TEST_DIRNAME/../../scripts/security/sudo-nopasswd.sh"
 }

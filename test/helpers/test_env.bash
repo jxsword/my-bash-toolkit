@@ -18,3 +18,11 @@ skip_unless_env() {
     skip "当前环境 $(env_detect_id) 不在 [ $* ]，跳过"
   fi
 }
+
+# env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
+# fn: 测试专用——设 _TESTENV_FAKE_ENV_ID 可强制覆盖环境识别（确定性模拟）
+if [[ -n "${_TESTENV_FAKE_ENV_ID:-}" ]]; then
+  env_detect_id() {
+    printf '%s\n' "$_TESTENV_FAKE_ENV_ID"
+  }
+fi
