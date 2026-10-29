@@ -9,7 +9,7 @@
 | ID | 脚本（路径） | 环境 | 系统级 | 批次 | 状态 |
 |---|---|---|---|---|---|
 | BL-001 | scripts/dev/mkscript.sh | 三环境 | 否 | 1 | ✅ |
-| BL-002 | scripts/dev/git-wip.sh | 三环境 | 否 | 2 | 待开发 |
+| BL-002 | scripts/dev/git-wip.sh | 三环境 | 否 | 2 | ✅ |
 | BL-003 | scripts/dev/env-dump.sh | 三环境 | 否 | 2 | 待开发 |
 | BL-004 | scripts/system/sysinfo.sh | ubuntu, wsl | 否 | 3 | 待开发 |
 | BL-005 | scripts/system/pkg-export.sh | ubuntu, wsl | 否 | 3 | 待开发 |
