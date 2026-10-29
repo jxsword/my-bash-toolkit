@@ -1,0 +1,2 @@
+shellcheck:SC2006
+shfmt:diff

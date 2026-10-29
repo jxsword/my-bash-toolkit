@@ -1,3 +1,5 @@
 # 项目级 ShellCheck 配置：CLI / pre-commit / VSCode 插件三处共用
-severity=warning
+# 注：severity 经 CLI `--severity=warning` 传递（rc 的 severity 键实测不被自动
+# 应用，shellcheck 0.11）；本文件管源码路径解析与外部源跟随。
+external-sources=true
 source-path=SCRIPTDIR

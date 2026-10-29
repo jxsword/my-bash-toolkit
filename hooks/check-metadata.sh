@@ -13,17 +13,22 @@ readonly _REQUIRED_TAGS="script-name description usage env category"
 # env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
 # fn: 校验单个文件的头部 tag 与函数标注；违规输出 file:line 并返回非零
 check_file() {
-  local file="$1" status=0 tag
+  local file="$1" status=0 tag block blockprog
   if ! head -n 1 "$file" | grep -q '^#!/usr/bin/env bash$'; then
     echo "$file:1: 缺少 shebang（应为 #!/usr/bin/env bash）"
     status=1
   fi
-  # 头部 tag：shebang 后、首个空行前的注释块中查找
+  # 头部 tag：shebang（若有）之后、首个空行之前的注释块中查找
+  local start=1
+  if head -n 1 "$file" | grep -q '^#!'; then
+    start=2
+  fi
+  blockprog='NR<s {next} /^[[:space:]]*$/ {exit} {print}'
+  block="$(awk -v s="$start" "$blockprog" "$file")"
   for tag in $_REQUIRED_TAGS; do
-    if ! head -n 30 "$file" \
-      | sed -n '2,/^[[:space:]]*$/p' \
-      | grep -Eq "^#[[:space:]]*${tag}:"; then
-      echo "$file:1: 缺少头部必需 tag '$tag'（规格见 docs/bash_env_and_doc_spec.md §4）"
+    if ! grep -Eq "^#[[:space:]]*${tag}:" <<< "$block"; then
+      echo "$file:1: 缺少头部必需 tag '$tag'"
+      echo "      （规格见 docs/bash_env_and_doc_spec.md §4）"
       status=1
     fi
   done
@@ -40,8 +45,8 @@ check_file() {
     }
     $0 ~ fnre {
       if (index(buf1 buf2 buf3, "# env:") == 0) {
-        printf "%s:%d: 函数缺 # env: 标注（规格见 docs/bash_env_and_doc_spec.md §5）\n",
-          file, FNR
+        printf "%s:%d: 函数缺 # env: 标注\n", file, FNR
+        printf "      （规格见 docs/bash_env_and_doc_spec.md §5）\n"
         bad = 1
       }
       buf3 = buf2; buf2 = buf1; buf1 = $0

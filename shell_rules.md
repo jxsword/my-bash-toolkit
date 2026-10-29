@@ -35,23 +35,23 @@ bash 版本区间与环境标注规格见 docs/bash_env_and_doc_spec.md。
 - 说明: 变量展开与命令替换一律双引号 `"$var"` `"$(cmd)"`；无需展开的字符串用单引号
 - 依据: styleguide「Quoting」
 - 工具: shellcheck
-- 检测: SC2086 等
+- 检测: SC2086（0.11 实测为 info 级，需 severity=style 档；值可静态推断为单一字面量时不触发，用例采用运行时参数）
 - 微例: `rm $file` → `rm "$file"`
 - 用例: bad/bad-unquoted-var.sh
 
 ## R05 命令替换
 - 说明: 用 `$(cmd)`，不用反引号
 - 依据: styleguide「Command Substitution」
-- 工具: shellcheck
-- 检测: SC2006
+- 工具: shellcheck + shfmt（shfmt 3.12 实测会将反引号归一化为 $()）
+- 检测: SC2006（style 级，需 severity=style 档）；shfmt -d 非空
 - 微例: ``d=`pwd` `` → `d="$(pwd)"`
-- 用例: bad/bad-backticks.sh
+- 用例: bad/bad-backticks.sh（双工具同时报出）
 
 ## R06 read
 - 说明: read 必须带 `-r`，保留反斜杠字面义
 - 依据: styleguide + ShellCheck
 - 工具: shellcheck
-- 检测: SC2162
+- 检测: SC2162（info 级，需 severity=style 档）
 - 微例: `read line` → `read -r line`
 - 用例: bad/bad-read-nor.sh
 

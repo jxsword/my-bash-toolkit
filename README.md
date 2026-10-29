@@ -31,7 +31,7 @@ pre-commit run --all-files       # 手动全量检查
 
 - 工具要求（Makefile `doctor` 目标可打印实测版本）：bash ≥5.2（受 .bash-version 锁定）、shfmt、shellcheck（apt 安装发行版版本即可）、bats ≥1.11、pre-commit ≥4。
 - hook 清单：shfmt -d（格式，参数 `-i 2 -ci -bn -sr`）、shellcheck、line-length（≤80 列）、check-metadata（头部 tag + 函数 env 标注）、rules-check-test（规范用例回归）。
-- `.shellcheckrc` 为项目级 ShellCheck 配置，CLI / pre-commit / VSCode 插件三处共用。
+- `.shellcheckrc`（external-sources、source-path）为项目级配置，CLI / pre-commit / VSCode 插件三处共用；严重级别经 CLI `--severity=style` 传递——shellcheck 0.11 实测 SC2086/SC2162/SC2006 均已降档，warning 档抓不到核心规则。
 
 ## 3. 脚本分类（10 域）
 

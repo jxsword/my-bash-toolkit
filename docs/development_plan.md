@@ -153,7 +153,7 @@ Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8；Phase 4 前置引入 b
 
 - 版本漂移：pre-commit-hooks 的 rev 在实施时取最新 tag（计划中的版本号为 2026-10-30 参考值）。
 - shfmt 无法检查行宽与 shebang：hooks/line-length.sh 与 check-metadata.sh 补位。
-- shellcheck 严重级别取 warning（error 太松、style 噪音大），按规则用例表现微调。
+- shellcheck 严重级别实施结论（实测 0.11）：SC2086→info、SC2162→info、SC2006→style，warning 档抓不到 R04/R05/R06 核心规则——门禁采用 `--severity=style`（全库噪音实测仅 1 条，已消除）；severity 键在 .shellcheckrc 中实测不被自动应用，经 CLI 传递。
 - pre-commit 首次运行需联网拉取 hook 环境；离线场景需预装。
 - golden 输出与工具版本耦合：归一化关键行比对缓解；工具升级后复核 golden（升级 checklist 入 README）。
 - WSL 跨文件系统语义：/mnt/c（DrvFs）权限位与属主无意义——沙箱不设在 /mnt/*，仓库保持 ext4。

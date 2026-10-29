@@ -1,6 +1,7 @@
 # 本地 hook 使用系统安装的 shfmt/shellcheck（版本要求见 README §2）。
 # 选择 system 二进制而非 scop/pre-commit-shfmt：避免 golang 首跑构建，速度与确定性优先。
 # rev 参考值 2026-10-30，可用 pre-commit autoupdate 校准。
+# rules_check_test/bad/ 为故意违规的固定用例，由 run_checks.sh 专门校验，各 hook 排除。
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -16,19 +17,29 @@ repos:
         entry: shfmt -d -i 2 -ci -bn -sr
         language: system
         types: [shell]
+        exclude: ^rules_check_test/bad/
       - id: shellcheck
-        name: shellcheck (severity=warning via .shellcheckrc)
+        name: shellcheck (severity=style, config via .shellcheckrc)
         entry: shellcheck
+        args: ["--severity=style"]
         language: system
         types: [shell]
+        exclude: ^rules_check_test/bad/
       - id: line-length
         name: line-length (<=80 columns)
         entry: hooks/line-length.sh
         language: system
         types: [shell]
+        exclude: ^rules_check_test/bad/
       - id: check-metadata
         name: header tags & function env annotations
         entry: hooks/check-metadata.sh
         language: system
         types: [shell]
         exclude: ^rules_check_test/bad/
+      - id: rules-check-test
+        name: rules_check_test regression
+        entry: rules_check_test/run_checks.sh
+        language: system
+        pass_filenames: false
+        files: ^(scripts|hooks|rules_check_test)/.*\.sh$
