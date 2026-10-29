@@ -20,7 +20,7 @@ usage() {
 # env: ubuntu-26.04, wsl-ubuntu-26.04
 # fn: 校验用户名合法、存在且属于 sudo/wheel 组
 validate_user() {
-  local user="$1"
+  local user="$1" groups
   if ! [[ "$user" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
     echo "错误: 用户名 '$user' 格式非法" >&2
     return 1
@@ -29,8 +29,9 @@ validate_user() {
     echo "错误: 用户 '$user' 不存在" >&2
     return 1
   fi
-  if ! id -nG "$user" | grep -Eq '(^| )(sudo|wheel)( |$)'; then
-    echo "错误: 用户 '$user' 不属于 sudo/wheel 组" >&2
+  groups="$(id -nG "$user")"
+  if ! [[ "$groups" =~ (^|[[:space:]])(sudo|wheel)([[:space:]]|$) ]]; then
+    echo "错误: 用户 '$user' 不属于 sudo/wheel 组（groups: $groups）" >&2
     return 1
   fi
 }

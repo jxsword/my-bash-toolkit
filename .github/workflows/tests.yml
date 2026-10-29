@@ -21,7 +21,9 @@ jobs:
             echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           fi
       - name: bash 环境预检（.bash-version 判定）
-        run: scripts/lib/env.sh
+        run: |
+          id
+          scripts/lib/env.sh
       - name: pre-commit 全量检查
         run: pre-commit run --all-files
       - name: 规范实证用例
