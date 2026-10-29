@@ -1,0 +1,3 @@
+# bash 支持区间（语义化版本，端点含）；更新流程见 docs/bash_env_and_doc_spec.md §8
+# MIN: 三目标环境最低覆盖（Git Bash 5.2.x）；MAX: 2026-10-30 WSL Ubuntu 26.04.1 实测
+5.2.0-5.3.9
