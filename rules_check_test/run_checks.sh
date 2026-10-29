@@ -129,6 +129,13 @@ main() {
         ;;
     esac
   done
+  local tool
+  for tool in shfmt shellcheck; do
+    if ! command -v "$tool" > /dev/null 2>&1; then
+      echo "run_checks: 缺少 $tool（git bash 安装方式见 README §4）" >&2
+      return 2
+    fi
+  done
   for file in "$_ROOT"/good/*.sh; do
     [[ -e "$file" ]] || continue
     if check_good_case "$file"; then

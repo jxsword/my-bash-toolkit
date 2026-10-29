@@ -12,6 +12,27 @@ setup() {
   load '../helpers/test_env'
 }
 
+# bats 文件内助手：构造严格高于/低于当前宿主 bash 的版本号，
+# 使边界用例不依赖特定宿主版本（git bash 5.2.x 与 ubuntu 5.3.x 通吃）
+above_current() {
+  if ((BASH_VERSINFO[1] < 99)); then
+    printf '%d.%d.0\n' "${BASH_VERSINFO[0]}" "$((BASH_VERSINFO[1] + 1))"
+  else
+    printf '%d.0.0\n' "$((BASH_VERSINFO[0] + 1))"
+  fi
+}
+
+below_current() {
+  if ((BASH_VERSINFO[2] > 0)); then
+    printf '%d.%d.%d\n' \
+      "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}" "$((BASH_VERSINFO[2] - 1))"
+  elif ((BASH_VERSINFO[1] > 0)); then
+    printf '%d.%d.99\n' "${BASH_VERSINFO[0]}" "$((BASH_VERSINFO[1] - 1))"
+  else
+    printf '%d.99.99\n' "$((BASH_VERSINFO[0] - 1))"
+  fi
+}
+
 @test "env_version_cmp 相等输出 0" {
   run env_version_cmp 5.2.0 5.2.0
   [ "$status" -eq 0 ]
@@ -50,10 +71,10 @@ setup() {
   [ "$status" -eq 2 ]
 }
 
-@test "bash_env_check 区间内返回 0" {
+@test "bash_env_check 区间内返回 0（动态边界）" {
   local f
   f="$(mktemp)"
-  printf '5.2.0-5.4.0\n' > "$f"
+  printf '%s-%s\n' "$(below_current)" "$(above_current)" > "$f"
   export BASH_VERSION_FILE="$f"
   run bash_env_check --quiet
   rm -f "$f"
@@ -61,10 +82,10 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
-@test "bash_env_check 高于 MAX 返回 1" {
+@test "bash_env_check 高于 MAX 返回 1（动态边界）" {
   local f
   f="$(mktemp)"
-  printf '5.2.0-5.3.3\n' > "$f"
+  printf '0.0.0-%s\n' "$(below_current)" > "$f"
   export BASH_VERSION_FILE="$f"
   run bash_env_check --quiet
   rm -f "$f"
@@ -72,10 +93,10 @@ setup() {
   [ "$status" -eq 1 ]
 }
 
-@test "bash_env_check 低于 MIN 返回 1" {
+@test "bash_env_check 低于 MIN 返回 1（动态边界）" {
   local f
   f="$(mktemp)"
-  printf '5.4.0-5.5.0\n' > "$f"
+  printf '%s-9.9.9\n' "$(above_current)" > "$f"
   export BASH_VERSION_FILE="$f"
   run bash_env_check --quiet
   rm -f "$f"
