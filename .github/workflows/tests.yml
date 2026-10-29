@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ubuntu-26-04:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: 安装工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats shfmt shellcheck
+          python3 -m pip install --user pre-commit
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: bash 环境预检（.bash-version 判定）
+        run: scripts/lib/env.sh
+      - name: pre-commit 全量检查
+        run: pre-commit run --all-files
+      - name: 规范实证用例
+        run: make check-rules
+      - name: 单元测试
+        run: make test
