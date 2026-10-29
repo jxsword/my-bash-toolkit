@@ -14,8 +14,10 @@ readonly _REQUIRED_TAGS="script-name description usage env category"
 # fn: 校验单个文件的头部 tag 与函数标注；违规输出 file:line 并返回非零
 check_file() {
   local file="$1" status=0 tag block blockprog
-  if ! head -n 1 "$file" | grep -q '^#!/usr/bin/env bash$'; then
-    echo "$file:1: 缺少 shebang（应为 #!/usr/bin/env bash）"
+  local is_bats="false"
+  [[ "$file" == *.bats ]] && is_bats="true"
+  if ! head -n 1 "$file" | grep -Eq '^#!/usr/bin/env (bash|bats)$'; then
+    echo "$file:1: 缺少 shebang（应为 #!/usr/bin/env bash 或 bats）"
     status=1
   fi
   # 头部 tag：shebang（若有）之后、首个空行之前的注释块中查找
@@ -32,6 +34,10 @@ check_file() {
       status=1
     fi
   done
+  # 函数级 env 标注：bats DSL 文件（setup/@test 由框架管理）豁免
+  if [[ "$is_bats" == "true" ]]; then
+    return "$status"
+  fi
   # 函数级 env 标注：定义行前 3 行内须有 "# env:"
   local fnre
   fnre="^[[:space:]]*(function[[:space:]]+)?"

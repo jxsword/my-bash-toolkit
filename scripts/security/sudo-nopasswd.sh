@@ -38,7 +38,7 @@ validate_user() {
 # env: ubuntu-26.04, wsl-ubuntu-26.04
 # fn: 校验 /etc/sudoers 已启用 sudoers.d 包含目录
 check_includedir() {
-  if ! sudo grep -q '^#includedir.*sudoers\.d' /etc/sudoers; then
+  if ! sudo -n grep -q '^#includedir.*sudoers\.d' /etc/sudoers; then
     echo "警告: /etc/sudoers 未包含 #includedir /etc/sudoers.d，配置不会生效" >&2
     return 1
   fi
@@ -50,7 +50,7 @@ enable_nopasswd() {
   local user="$1" dry="$2" sudoers_file tmp_file
   sudoers_file="/etc/sudoers.d/${user}-nopasswd"
   if [[ -f "$sudoers_file" ]] \
-    && sudo grep -q 'NOPASSWD: ALL' "$sudoers_file"; then
+    && sudo -n grep -q 'NOPASSWD: ALL' "$sudoers_file"; then
     echo "提示: $user 已是免密状态"
     return 0
   fi
@@ -97,7 +97,7 @@ show_status() {
   local user="$1" sudoers_file
   sudoers_file="/etc/sudoers.d/${user}-nopasswd"
   if [[ -f "$sudoers_file" ]] \
-    && sudo grep -q 'NOPASSWD: ALL' "$sudoers_file"; then
+    && sudo -n grep -q 'NOPASSWD: ALL' "$sudoers_file"; then
     echo "$user: 免密已开启 ($sudoers_file)"
   else
     echo "$user: 正常密码验证"

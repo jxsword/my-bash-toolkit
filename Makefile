@@ -10,8 +10,8 @@ help: ## 显示可用目标
 lint: ## pre-commit 全量检查（提交门禁）
 	pre-commit run --all-files
 
-test: ## bats 单元测试（Stage 1）
-	bats test/
+test: ## bats 单元测试（Stage 1，递归收集 *.bats，排除 libs）
+	@bats $$(find test -name '*.bats' -not -path 'test/libs/*' | sort)
 
 check-rules: ## rules_check_test 规范用例回归
 	rules_check_test/run_checks.sh
