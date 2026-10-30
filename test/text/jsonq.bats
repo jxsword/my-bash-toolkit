@@ -18,8 +18,10 @@ setup() {
   sandbox_setup
   SCRIPT="$BATS_TEST_DIRNAME/../../scripts/text/jsonq.sh"
   FIXTURE="$SANDBOX_DIR/data.json"
-  # python3 缺失的环境（部分 Windows git bash）整体跳过主路径用例
-  if ! command -v python3 > /dev/null 2>&1; then
+  # python3 缺失的环境（部分 Windows git bash）跳过真实解释器用例；
+  # 「桩」前缀用例用 JSONQ_PYTHON 显式指定假解释器，不依赖本机 python3
+  if ! command -v python3 > /dev/null 2>&1 \
+    && [[ "$BATS_TEST_NAME" != "桩："* ]]; then
     skip "python3 不可用，跳过 jsonq 测试"
   fi
   make_fixture
@@ -43,6 +45,28 @@ make_fixture() {
   ]
 }
 EOF
+}
+
+# env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
+# fn: 写入读 stdin 的假 python 桩——探针调用（2 个参数）读 stdin 并记录
+#   到 STUB_REPORT；查询调用（4 个参数）读 stdin、记录表达式与 stdin
+#   内容、stdout 输出 STUBVAL。用于确定性验证 jsonq 的 python 调用
+#   stdin 绑定与 timeout 包装（不依赖本机 python3）
+make_stdin_stub() {
+  cat > "$SANDBOX_DIR/stub-python" << 'EOF'
+#!/usr/bin/env bash
+report="${STUB_REPORT:?STUB_REPORT 未设置}"
+if [[ "$1" == "-c" && "$#" -eq 2 ]]; then
+  probe_in="$(cat)"
+  printf 'probe|stdin=%s|\n' "$probe_in" >> "$report"
+  exit 0
+fi
+data="$(cat)"
+printf 'query|expr=%s|stdin=%s|\n' "$3" "$data" >> "$report"
+echo "STUBVAL"
+exit 0
+EOF
+  chmod +x "$SANDBOX_DIR/stub-python"
 }
 
 @test "无参数输出用法并返回 2" {
@@ -232,5 +256,67 @@ EOF
   chmod +x "$stub"
   JSONQ_PYTHON="$stub" run "$SCRIPT" -e "$FIXTURE" user.name
   assert_failure 3
+  assert_output --partial "JSONQ_PYTHON"
+}
+
+@test "桩：查询调用的 python stdin 绑定输入文件，不继承调用方 stdin" {
+  local report="$SANDBOX_DIR/stdin-report.txt"
+  : > "$report"
+  make_stdin_stub
+  # 调用方 stdin 喂入标记数据 CALLER-LEAK；若 python 调用继承它，
+  # 桩报告会出现 CALLER-LEAK——断言不得出现
+  STUB_REPORT="$report" JSONQ_PYTHON="$SANDBOX_DIR/stub-python" \
+    run bash -c 'printf "CALLER-LEAK" | "$1" "$2" user.name' \
+    _ "$SCRIPT" "$FIXTURE"
+  assert_success
+  assert_output "STUBVAL"
+  local seen
+  seen="$(cat "$report")"
+  [[ "$seen" == *'probe|stdin=|'* ]]
+  [[ "$seen" == *'"张三"'* ]]
+  [[ "$seen" != *'CALLER-LEAK'* ]]
+}
+
+@test "桩：健康探针的 python stdin 恒为 /dev/null，不吃调用方 stdin" {
+  local report="$SANDBOX_DIR/probe-report.txt"
+  : > "$report"
+  make_stdin_stub
+  STUB_REPORT="$report" JSONQ_PYTHON="$SANDBOX_DIR/stub-python" \
+    run bash -c 'printf "CALLER-LEAK" | "$1" "$2" user.name' \
+    _ "$SCRIPT" "$FIXTURE"
+  assert_success
+  local seen
+  seen="$(cat "$report")"
+  # 探针 stdin 若继承调用方管道会读到 CALLER-LEAK——断言为空
+  [[ "$seen" == *'probe|stdin=|'* ]]
+  [[ "$seen" != *'probe|stdin=CALLER-LEAK'* ]]
+  [[ "$seen" == *'"张三"'* ]]
+}
+
+@test "桩：查询调用悬挂被 timeout 上限快速终止并返回 3" {
+  local stub="$SANDBOX_DIR/slow-python"
+  cat > "$stub" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "-c" && "$#" -eq 2 ]]; then
+  exit 0
+fi
+sleep 30
+EOF
+  chmod +x "$stub"
+  # JSONQ_PY_TIMEOUT=1 验证包装生效（远小于 60s 默认上限）
+  JSONQ_PYTHON="$stub" JSONQ_PY_TIMEOUT=1 \
+    run "$SCRIPT" "$FIXTURE" user.name
+  assert_failure 3
+  assert_output --partial "超时"
+}
+
+@test "桩：探针悬挂同样被 timeout 上限终止（探测失败返回 3）" {
+  local stub="$SANDBOX_DIR/slow-probe-python"
+  printf '#!/usr/bin/env bash\nsleep 30\n' > "$stub"
+  chmod +x "$stub"
+  JSONQ_PYTHON="$stub" JSONQ_PY_TIMEOUT=1 \
+    run "$SCRIPT" "$FIXTURE" user.name
+  assert_failure 3
+  assert_output --partial "python3 探针超时"
   assert_output --partial "JSONQ_PYTHON"
 }

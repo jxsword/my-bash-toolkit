@@ -57,6 +57,7 @@ pre-commit run --all-files       # 手动全量检查
   2. Stage 2 GitHub Actions（ubuntu-26.04）：pre-commit + check-rules + test；
   3. Stage 3 Windows git bash：手动克隆本仓库到 Windows 工作区 → `./run_tests.sh` 批量自动化测试；问题按脚本模块修复后从 Stage 1 依序重跑。
 - git bash 指引：git bash 无 make，直接 `./run_tests.sh`；bats 必装（`npm install -g bats` 或从 bats-core releases 下载后加入 PATH）；shfmt/shellcheck 可选——缺失时 rules_check_test 回归用例自动跳过（格式与静态门禁由 Stage 1/2 承担），如需在 Windows 本地跑规则回归可安装两者（如 `scoop install shfmt shellcheck`）。
+- git bash 性能预期：全量测试 10-25 分钟属正常——MSYS 进程创建开销（约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描放大；建议在 Windows 安全中心把仓库目录、Git 安装目录与 python/scoop 安装目录加入排除项以缩短时长。**验收以用例结果为准，不追求速度。**
 - **克隆本仓库请带子模块**：`git clone --recurse-submodules <url>`；已克隆的补执行 `git submodule update --init --recursive`（bats 助手库在 test/libs/，缺失时依赖它的用例会失败）。
 
 ## 5. 常用命令（Makefile）

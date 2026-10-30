@@ -19,7 +19,7 @@
 个人 bash 脚本管理仓库：Google Shell Style 规范 + pre-commit 质量门禁（shfmt/ShellCheck）+ 10 域分类 + `.bash-version` 版本锁定（5.2.0-5.3.9 双向硬阻断）+ Bats-core 单元测试 + 注释抽取文档自动化。
 
 - 仓库: https://github.com/jxsword/my-bash-toolkit （public，main，GitHub Flow）
-- 测试状态: Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9）与 Stage 2 GitHub Actions 全绿；Stage 3 git-bash 曾现 jsonq 回归（python3 Store 存根致退出 49），2026-10-31 已加探针+MSYS 加固修复（WSL 侧全绿），**git-bash 侧待用户复验**（需真实 python3 或设 `JSONQ_PYTHON`）。
+- 测试状态: Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9）与 Stage 2 GitHub Actions 全绿；Stage 3 git-bash 曾现 jsonq 回归（python3 Store 存根致退出 49），2026-10-31 已加探针+MSYS 加固修复；同日复验又现中文乱码与个别用例停顿，已加 PYTHONUTF8 强制编码 + stdin 显式化 + timeout 60 加固（WSL 侧全绿），**git-bash 侧待用户复验**（需真实 python3 或设 `JSONQ_PYTHON`）。
 - 人工闸门 A-D 已全部关闭（详见 development_plan §10）。
 - 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。BL-001 mkscript（2026-10-30）、BL-002 git-wip（2026-10-30）、BL-003 env-dump（2026-10-30）、BL-006 jsonq（2026-10-30）、BL-008 dedup（2026-10-30）、BL-009 bulk-rename（2026-10-30）、BL-010 port-check（2026-10-30）、BL-004 sysinfo（2026-10-30）、BL-005 pkg-export（2026-10-30）与 BL-007 log-grep（2026-10-30）、BL-011 http-probe（2026-10-30）、BL-012 backup-dir（2026-10-30）、BL-013 disk-alert（2026-10-30）、BL-014 wsl-export（2026-10-30）、BL-015 clip（2026-10-30）、BL-016 perm-audit（2026-10-30）、BL-017 bootstrap-dev（2026-10-30）已完成，**队列全部清零**；后续新脚本可用 mkscript 生成规范骨架。
 
@@ -133,6 +133,8 @@ setup() {
 | 10 | nameref（`local -n ref="$2"`）的引用名与目标名相同（如都叫 present）→ 运行时报「循环的名称引用」且数组追加静默丢失（bootstrap-dev 开发踩中） | nameref 引用名一律用 `out_` 前缀内部名，与调用方传入的数组名错开（见 bootstrap-dev scan_profile）；写完后必须跑一次真实调用验证回填 |
 | 11 | bats `run` 会继承调用方 stdin：脚本内 `[ -t 0 ]` 自动判定在 TTY 终端跑测试时失真，非终端分支用例失败（clip 踩中） | 依赖 stdin 终端判定的用例必须显式固化前提，如 `run "$SCRIPT" < /dev/null`（见 test/wsl/clip.bats） |
 | 12 | git-bash 下 `command -v python3` 命中≠可执行：可能是 Windows Store 应用执行别名存根（真实退出 9009，MSYS `$?` 截断为 49、无输出），且 `-c` 内联代码/参数可能受 MSYS2 参数改写（jsonq Stage 3 回归踩中） | 解释器调用三件套：先健康探针（`"$py" -c 'import json'`，任何非零→退出 3 提示 `JSONQ_PYTHON`）+ 局部 `MSYS2_ARG_CONV_EXCL='*'` 传参 + 探针自带 `</dev/null`（见 jsonq `_jsonq_check_python`；该变量在非 MSYS 环境无副作用） |
+| 13 | git-bash 下 `JSONQ_PYTHON` 指向 Windows 本机 python（如 scoop）时，jsonq 中文错误消息乱码（ASCII 片段完好，形如 `jsonq: □Ƿ□ JSON`）：本机 python 对管道/重定向默认按系统 ANSI 代码页（中文 Windows = GBK/cp936）编码 stdout/stderr，中文经它写出变 GBK 字节，bats 按 UTF-8 比对失败；bash printf 输出（MSYS 程序 UTF-8 直写）不受影响 | 所有 python 调用统一加 `PYTHONUTF8=1` + `PYTHONIOENCODING=utf-8` 环境前缀，python 代码内 `sys.stdout/stderr.reconfigure(encoding="utf-8")` 双保险；Linux 下前缀无副作用（jsonq `run_query`/`_jsonq_check_python`；与 #12 同为"command -v 命中≠按预期工作"一族） |
+| 14 | git bash 全量测试慢（10-25 分钟量级）：MSYS 进程创建开销（每进程几十 ms，约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描逐个放大 | 脚本侧无法根治，做文档化：建议在 Windows 安全中心把仓库目录、Git 安装目录、python/scoop 安装目录加入排除项；git bash 侧 10 分钟量级属预期，**验收以用例结果为准，不追求速度**（README §4 同步；jsonq 另加 timeout 60 包装防个别 python 调用悬挂放大停顿） |
 
 ## 10. 常用命令速查
 
