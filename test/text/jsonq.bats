@@ -213,3 +213,24 @@ EOF
   assert_failure 3
   assert_output --partial "python3"
 }
+
+@test "python3 探测失败（存根式，退出 49）返回 3 并提示 JSONQ_PYTHON" {
+  # 确定性模拟 Windows Store 存根：解释器存在（command -v 命中），
+  # 但执行必失败且退出码 49（9009 经 MSYS 折算）
+  local stub="$SANDBOX_DIR/fake-python-stub"
+  printf '#!/usr/bin/env bash\nexit 49\n' > "$stub"
+  chmod +x "$stub"
+  JSONQ_PYTHON="$stub" run "$SCRIPT" "$FIXTURE" user.name
+  assert_failure 3
+  assert_output --partial "python3 探测失败（退出码 49）"
+  assert_output --partial "JSONQ_PYTHON"
+}
+
+@test "python3 探测失败不影响输出 stderr 指引（退出码任意非零均拦）" {
+  local stub="$SANDBOX_DIR/fake-python-rc1"
+  printf '#!/usr/bin/env bash\nexit 1\n' > "$stub"
+  chmod +x "$stub"
+  JSONQ_PYTHON="$stub" run "$SCRIPT" -e "$FIXTURE" user.name
+  assert_failure 3
+  assert_output --partial "JSONQ_PYTHON"
+}

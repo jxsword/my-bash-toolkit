@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT —— 新会话上下文总入口
 
-> 最后更新: 2026-10-30 ｜ 维护义务: 新增/修改脚本或决策后必须同步更新本文件（AGENTS.md 有约束条款）
+> 最后更新: 2026-10-31 ｜ 维护义务: 新增/修改脚本或决策后必须同步更新本文件（AGENTS.md 有约束条款）
 > commit 历史以 `git log` 为准，本文不记录 hash。
 
 ## 0. 如何启动新会话（复制即用）
@@ -19,7 +19,7 @@
 个人 bash 脚本管理仓库：Google Shell Style 规范 + pre-commit 质量门禁（shfmt/ShellCheck）+ 10 域分类 + `.bash-version` 版本锁定（5.2.0-5.3.9 双向硬阻断）+ Bats-core 单元测试 + 注释抽取文档自动化。
 
 - 仓库: https://github.com/jxsword/my-bash-toolkit （public，main，GitHub Flow）
-- 测试状态: **三环境全部通过**——Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9，26 用例）、Stage 2 GitHub Actions ubuntu-26.04（bash 5.3.9，CI 绿）、Stage 3 Windows Git Bash（bash 5.2.37，13 执行 + 13 skip 亲测通过）。
+- 测试状态: Stage 1 WSL Ubuntu 26.04.1（bash 5.3.9）与 Stage 2 GitHub Actions 全绿；Stage 3 git-bash 曾现 jsonq 回归（python3 Store 存根致退出 49），2026-10-31 已加探针+MSYS 加固修复（WSL 侧全绿），**git-bash 侧待用户复验**（需真实 python3 或设 `JSONQ_PYTHON`）。
 - 人工闸门 A-D 已全部关闭（详见 development_plan §10）。
 - 项目阶段: 三环境闭环完成，**进入脚本开发期**；已立项 17 个日常/运维脚本（BL-001~017），队列见 docs/BACKLOG.md，每项在新会话按 SOP 开发。BL-001 mkscript（2026-10-30）、BL-002 git-wip（2026-10-30）、BL-003 env-dump（2026-10-30）、BL-006 jsonq（2026-10-30）、BL-008 dedup（2026-10-30）、BL-009 bulk-rename（2026-10-30）、BL-010 port-check（2026-10-30）、BL-004 sysinfo（2026-10-30）、BL-005 pkg-export（2026-10-30）与 BL-007 log-grep（2026-10-30）、BL-011 http-probe（2026-10-30）、BL-012 backup-dir（2026-10-30）、BL-013 disk-alert（2026-10-30）、BL-014 wsl-export（2026-10-30）、BL-015 clip（2026-10-30）、BL-016 perm-audit（2026-10-30）、BL-017 bootstrap-dev（2026-10-30）已完成，**队列全部清零**；后续新脚本可用 mkscript 生成规范骨架。
 
@@ -131,6 +131,8 @@ setup() {
 | 8 | GH runner 组前提 / /mnt/c（DrvFs）权限语义 | 测试两层拆分（函数级必跑 + CLI 组前提 skip）；沙箱不设 /mnt/*、仓库保持 ext4 |
 | 9 | bash 5.3 实测：`arr[$k]+="${arr[$k]:-}x"` 自引用追加会把值翻倍（dedup 开发踩中）；`wc -l <<< "$str"` 因 herestring 追加换行恒多计 1 | 关联数组累积一律用整体赋值 `arr[$k]="${arr[$k]:-}…"`；计数用 `printf '%s' "$str" \| wc -l`，不用 herestring |
 | 10 | nameref（`local -n ref="$2"`）的引用名与目标名相同（如都叫 present）→ 运行时报「循环的名称引用」且数组追加静默丢失（bootstrap-dev 开发踩中） | nameref 引用名一律用 `out_` 前缀内部名，与调用方传入的数组名错开（见 bootstrap-dev scan_profile）；写完后必须跑一次真实调用验证回填 |
+| 11 | bats `run` 会继承调用方 stdin：脚本内 `[ -t 0 ]` 自动判定在 TTY 终端跑测试时失真，非终端分支用例失败（clip 踩中） | 依赖 stdin 终端判定的用例必须显式固化前提，如 `run "$SCRIPT" < /dev/null`（见 test/wsl/clip.bats） |
+| 12 | git-bash 下 `command -v python3` 命中≠可执行：可能是 Windows Store 应用执行别名存根（真实退出 9009，MSYS `$?` 截断为 49、无输出），且 `-c` 内联代码/参数可能受 MSYS2 参数改写（jsonq Stage 3 回归踩中） | 解释器调用三件套：先健康探针（`"$py" -c 'import json'`，任何非零→退出 3 提示 `JSONQ_PYTHON`）+ 局部 `MSYS2_ARG_CONV_EXCL='*'` 传参 + 探针自带 `</dev/null`（见 jsonq `_jsonq_check_python`；该变量在非 MSYS 环境无副作用） |
 
 ## 10. 常用命令速查
 

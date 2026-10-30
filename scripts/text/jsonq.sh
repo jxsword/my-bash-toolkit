@@ -117,8 +117,27 @@ usage() {
   echo "  <点路径>  点分隔路径，数值段为数组下标，如 user.name / items.0.id" >&2
   echo "  -t        输出目标值的 JSON 类型" >&2
   echo "  -e        仅检测路径是否存在（存在 0 / 不存在 1，无输出）" >&2
-  echo "退出码: 0 成功；1 路径不存在；2 用法/路径表达式错误；3 输入错误（文件不可读、非法 JSON、python3 缺失）" >&2
+  echo "退出码: 0 成功；1 路径不存在；2 用法/路径表达式错误；3 输入错误（文件不可读、非法 JSON、python3 缺失或不可用）" >&2
   echo "说明: 值以 JSON 字面量输出（字符串带引号）；依赖 python3 兜底解析，无 jq 依赖" >&2
+}
+
+# env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
+# fn: python 解释器健康探针——command -v 命中不代表可执行
+#   （git bash 下 Windows Store 存根退出 9009，MSYS 折算 49）
+_jsonq_check_python() {
+  local py="$1" probe_rc
+  # </dev/null：探针不吃调用方 stdin；ARG_CONV_EXCL：防 MSYS 改写
+  MSYS2_ARG_CONV_EXCL='*' \
+    "$py" -c 'import json' > /dev/null 2>&1 < /dev/null
+  probe_rc=$?
+  if ((probe_rc == 0)); then
+    return 0
+  fi
+  log_err "python3 探测失败（退出码 $probe_rc）：存在但不可用"
+  log_err "      git bash 常见根因：python3 是 Windows Store 存根"
+  log_err "      （真实退出 9009，MSYS 折算 49）或 MSYS 参数改写"
+  log_err "      对策：装真 python3，或 JSONQ_PYTHON 指定解释器"
+  return 3
 }
 
 # env: ubuntu-26.04, wsl-ubuntu-26.04, git-bash
@@ -131,11 +150,16 @@ run_query() {
     log_err "      请先安装 python3（或用 JSONQ_PYTHON 指定解释器路径）"
     return 3
   fi
+  _jsonq_check_python "$py" || return 3
   local out rc
+  # MSYS2_ARG_CONV_EXCL='*'：git bash 下禁用 MSYS 对 -c 内联代码与
+  # 路径表达式参数的 POSIX 路径改写；非 MSYS 环境该变量无副作用。
   if [[ "$src" == "-" ]]; then
-    out="$("$py" -c "$_JSONQ_PY" "$expr" "$mode")"
+    out="$(MSYS2_ARG_CONV_EXCL='*' "$py" -c "$_JSONQ_PY" \
+      "$expr" "$mode")"
   else
-    out="$("$py" -c "$_JSONQ_PY" "$expr" "$mode" < "$src")"
+    out="$(MSYS2_ARG_CONV_EXCL='*' "$py" -c "$_JSONQ_PY" \
+      "$expr" "$mode" < "$src")"
   fi
   rc=$?
   if ((rc != 0)); then
