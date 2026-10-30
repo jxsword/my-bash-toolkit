@@ -21,7 +21,7 @@
 | BL-011 | scripts/net/http-probe.sh | 三环境 | 否 | 3 | ✅ |
 | BL-012 | scripts/ops/backup-dir.sh | ubuntu, wsl | **是** | 3 | ✅ |
 | BL-013 | scripts/ops/disk-alert.sh | ubuntu, wsl | 否 | 3 | ✅ |
-| BL-014 | scripts/wsl/wsl-export.sh | git-bash | **是** | 4 | 待开发 |
+| BL-014 | scripts/wsl/wsl-export.sh | git-bash | **是** | 4 | ✅ |
 | BL-015 | scripts/wsl/clip.sh | wsl | 否 | 3 | ✅ |
 | BL-016 | scripts/security/perm-audit.sh | ubuntu, wsl | **是** | 4 | 待开发 |
 | BL-017 | scripts/install/bootstrap-dev.sh | ubuntu, wsl | **是** | 4 | 待开发 |
