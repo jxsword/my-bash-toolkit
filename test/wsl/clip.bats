@@ -122,7 +122,9 @@ use_min_path() {
   install_clip_stub
   install_pwsh_stub
   use_stub_path
-  run "$SCRIPT"
+  # 显式 </dev/null 固化「stdin 非终端」前提：run 继承调用方 stdin，
+  # TTY 环境下不重定向会让脚本 [[ -t 0 ]] 误走粘贴分支
+  run "$SCRIPT" < /dev/null
   [ "$status" -eq 0 ]
   [[ -f "$STUB_OUT" && ! -s "$STUB_OUT" ]]
   local log
