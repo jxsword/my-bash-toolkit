@@ -24,7 +24,7 @@
 | BL-014 | scripts/wsl/wsl-export.sh | git-bash | **是** | 4 | ✅ |
 | BL-015 | scripts/wsl/clip.sh | wsl | 否 | 3 | ✅ |
 | BL-016 | scripts/security/perm-audit.sh | ubuntu, wsl | **是** | 4 | ✅ |
-| BL-017 | scripts/install/bootstrap-dev.sh | ubuntu, wsl | **是** | 4 | 待开发 |
+| BL-017 | scripts/install/bootstrap-dev.sh | ubuntu, wsl | **是** | 4 | ✅ |
 
 批次含义：1 = 开发基础设施（先行，后续脚手架用）；2 = 高频轻量；3 = 日常运维；4 = 系统级需谨慎测试。
 
