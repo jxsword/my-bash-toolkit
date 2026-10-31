@@ -57,19 +57,22 @@ pre-commit run --all-files       # 手动全量检查
   2. Stage 2 GitHub Actions（ubuntu-26.04）：pre-commit + check-rules + test；
   3. Stage 3 Windows git bash：手动克隆本仓库到 Windows 工作区 → `./run_tests.sh` 批量自动化测试；问题按脚本模块修复后从 Stage 1 依序重跑。
 - git bash 指引：git bash 无 make，直接 `./run_tests.sh`；bats 必装（`npm install -g bats` 或从 bats-core releases 下载后加入 PATH）；shfmt/shellcheck 可选——缺失时 rules_check_test 回归用例自动跳过（格式与静态门禁由 Stage 1/2 承担），如需在 Windows 本地跑规则回归可安装两者（如 `scoop install shfmt shellcheck`）。
-- git bash 性能预期：全量测试 10-25 分钟属正常——MSYS 进程创建开销（约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描放大；建议在 Windows 安全中心把仓库目录、Git 安装目录与 python/scoop 安装目录加入排除项以缩短时长。**验收以用例结果为准，不追求速度。**
+- git bash 性能预期：全量测试 10-25 分钟属正常——MSYS 进程创建开销（约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描放大；建议在 Windows 安全中心把仓库目录、Git 安装目录与 python/scoop 安装目录加入排除项以缩短时长。**验收以用例结果为准，不追求速度。**深层机理、优化分级与基准对比方法见 [测试性能分析](docs/test_performance.md)。
 - **克隆本仓库请带子模块**：`git clone --recurse-submodules <url>`；已克隆的补执行 `git submodule update --init --recursive`（bats 助手库在 test/libs/，缺失时依赖它的用例会失败）。
 
 ## 5. 常用命令（Makefile）
 
 ```bash
-make help         # 目标清单
-make env-check    # bash 环境/版本判定（.bash-version）
-make lint         # pre-commit run --all-files
-make test         # bats 全量单元测试
-make check-rules  # rules_check_test 规范用例回归
-make docs         # 重新生成 docs/SCRIPTS.md
-make doctor       # 打印工具链版本
+make help          # 目标清单
+make env-check     # bash 环境/版本判定（.bash-version）
+make lint          # pre-commit run --all-files
+make test          # bats 全量单元测试
+make test-changed  # 只运行与变更文件对应的用例（本地定向，CI 全量兜底）
+make test-one F=test/lib/env.bats  # 秒级重跑单个测试文件（失败修复循环）
+make bench-tests   # 测试基准计时（ARGS="--save bench.md" 落盘对比）
+make check-rules   # rules_check_test 规范用例回归
+make docs          # 重新生成 docs/SCRIPTS.md
+make doctor        # 打印工具链版本
 ```
 
 ## 6. 文档自动化
@@ -87,4 +90,4 @@ make doctor       # 打印工具链版本
 
 - 分支模型：GitHub Flow——main + 短生命周期 feature 分支，合并前过门禁与测试（DR-002）。
 - 提交信息：决策类改动在正文末尾附 `Decision: DR-编号`。
-- 文档：**[PROJECT_CONTEXT（新会话上下文总入口，先读）](docs/PROJECT_CONTEXT.md)** · [开发计划](docs/development_plan.md) · [决策记录](docs/decision_log.md) · [测试框架对比](docs/bash_test_framework_comparison.md) · [环境与文档规格](docs/bash_env_and_doc_spec.md) · [脚本文档（生成物）](docs/SCRIPTS.md)
+- 文档：**[PROJECT_CONTEXT（新会话上下文总入口，先读）](docs/PROJECT_CONTEXT.md)** · [开发计划](docs/development_plan.md) · [决策记录](docs/decision_log.md) · [测试框架对比](docs/bash_test_framework_comparison.md) · [环境与文档规格](docs/bash_env_and_doc_spec.md) · [测试性能分析](docs/test_performance.md) · [STAGE3 验收日志](docs/STAGE3_LOG.md) · [脚本文档（生成物）](docs/SCRIPTS.md)

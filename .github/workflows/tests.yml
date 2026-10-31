@@ -25,7 +25,9 @@ jobs:
           id
           scripts/lib/env.sh
       - name: pre-commit 全量检查
-        run: pre-commit run --all-files
+        # bats-changed 钩子在 --all-files 下会回退全量，与后面的 make test 重复；
+        # CI 的全量兜底由 make test 承担，这里跳过该钩子
+        run: SKIP=bats-changed pre-commit run --all-files
       - name: 规范实证用例
         run: make check-rules
       - name: 单元测试

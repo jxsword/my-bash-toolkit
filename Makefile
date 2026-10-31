@@ -1,17 +1,30 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help lint test check-rules docs env-check doctor check
+.PHONY: help lint test test-changed test-one bench-tests check-rules docs env-check doctor check
 
 help: ## 显示可用目标
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
 		| awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-lint: ## pre-commit 全量检查（提交门禁）
-	pre-commit run --all-files
+lint: ## pre-commit 全量检查（跳过 bats-changed 测试钩子，测试由 test/test-changed 承担）
+	SKIP=bats-changed pre-commit run --all-files
 
-test: ## bats 单元测试（Stage 1，递归收集 *.bats，排除 libs）
-	@bats $$(find test -name '*.bats' -not -path 'test/libs/*' | sort)
+test: ## bats 单元测试（全量，Stage 1）
+	@bats $$(bash -c 'source scripts/lib/test_files.sh && collect_bats_files')
+
+test-changed: ## 只运行与变更文件对应的 bats 用例（回退规则见 helper usage）
+	scripts/dev/test-changed.sh --run
+
+test-one: ## 运行单个测试文件（make test-one F=test/lib/env.bats）
+	@if [ -z "$(F)" ]; then \
+		echo "用法: make test-one F=<bats 文件>" >&2; exit 2; fi
+	@if [ ! -f "$(F)" ]; then \
+		echo "错误: 文件不存在: $(F)" >&2; exit 2; fi
+	bats "$(F)"
+
+bench-tests: ## 测试基准计时（ARGS 透传，如 ARGS="--save bench.md"）
+	scripts/dev/bench-tests.sh $(ARGS)
 
 check-rules: ## rules_check_test 规范用例回归
 	rules_check_test/run_checks.sh

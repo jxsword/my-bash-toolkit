@@ -43,3 +43,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^(scripts|hooks|rules_check_test)/.*\.sh$
+      - id: bats-changed
+        name: bats (changed files only)
+        entry: scripts/dev/test-changed.sh
+        args: ["--run", "--files"]
+        language: system
+        files: ^(scripts|rules_check_test|test)/.*\.(sh|bats)$
+        exclude: ^test/libs/

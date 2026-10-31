@@ -44,6 +44,8 @@
 6. `docs/bash_test_framework_comparison.md` —— 5 框架实测对比
 7. `docs/SCRIPTS.md` —— 现有脚本功能总览（**生成物，禁止手改**）
 8. `docs/BACKLOG.md` —— 脚本开发队列（已立项任务从这里取）
+9. `docs/test_performance.md` —— 测试性能分析与优化指南（三环境机理、git bash 慢因、基准对比方法）
+10. `docs/STAGE3_LOG.md` —— git bash 人工验收日志（按提交粒度，不作为跳过测试的依据）
 
 ## 4. 硬约束速查（违反 = 提交被拦或流程违规）
 
@@ -62,11 +64,14 @@
 |---|---|---|
 | scripts/lib/env.sh | 环境识别 + .bash-version 区间判定 | `source` 后用 env_detect_id / env_is_supported / bash_env_check；直接执行 = 自检 |
 | scripts/lib/common.sh | 日志 | source 后 log_info / log_err / log_warn |
+| scripts/lib/test_files.sh | 全量 .bats 清单收集（排除 libs） | source 后 collect_bats_files [root]；Makefile/run_tests/bench 共用 |
+| scripts/dev/test-changed.sh | 变更 → 用例映射器（定向测试引擎） | --run/--staged/--base/--files；映射与回退规则见其 usage；pre-commit `bats-changed` hook 也走它 |
+| scripts/dev/bench-tests.sh | 测试基准计时（逐文件分时 + 全跑墙钟） | `make bench-tests ARGS="--save 文件"`；优化前后对比方法见 docs/test_performance.md |
 | test/helpers/sandbox.bash | mktemp 沙箱与 HOME/XDG 隔离 | 测试 setup 调 sandbox_setup，teardown 调 sandbox_teardown |
 | test/helpers/backup_restore.bash | 系统级测试快照/恢复 | backup_paths / restore_paths（-P 保留绝对路径，仅 system-touch 用） |
 | test/helpers/test_env.bash | 按环境跳过用例 | load 后 skip_unless_env <id>...；设 `_TESTENV_FAKE_ENV_ID=<id>` 可确定性模拟任意环境 |
 | rules_check_test/ | 规范实证与 golden 机制 | `make check-rules`；新增机检规则时在 bad/ 加用例并 `--update-expected` 重建 golden |
-| Makefile | lint / test / check-rules / docs / env-check / doctor | `make help` 看清单 |
+| Makefile | lint / test / test-changed / test-one / bench-tests / check-rules / docs / env-check / doctor | `make help` 看清单 |
 
 ## 6. 最小 bats 测试模板（照抄改）
 
@@ -102,7 +107,7 @@ setup() {
 0. **会话自检**：`git pull && make check` 全绿后再开工（基线漂移不得开发）。
 1. **定分类**：按 10 域表归位（system/security/dev/text/files/net/ops/install/wsl/lib）；归属模糊时向用户确认。
 2. **规范改造/生成**：kebab-case 命名、头部 5 tag、函数级 `# env:`、`set -u -o pipefail`、引用同仓库资源用 `$(dirname "${BASH_SOURCE[0]}")`、系统级脚本加 `--dry-run`、日志走 common.sh。
-3. **测试**：`test/<分类>/<名>.bats`（套 §6 模板）；`make test` 全绿。
+3. **测试**：`test/<分类>/<名>.bats`（套 §6 模板）；日常迭代 `make test-changed` 只跑变更对应用例（映射/回退规则见 scripts/dev/test-changed.sh usage），CI 侧全量兜底；失败修复循环用 `make test-one F=<文件>` 或 `bats <单文件>` 秒级重跑。
 4. **文档**：`make docs` 重新生成 SCRIPTS.md，随代码同一提交。
 5. **提交**：pre-commit 门禁通过 → GitHub Flow 短分支或 main 直提 → push；决策类改动提交信息末尾加 `Decision: DR-编号`，新决策先补 decision_log。
 6. **回写上下文**：更新本文件（新脚本入 §5 后的清单视角由 SCRIPTS.md 承担，本文件更新快照/坑位/约束如有变化）。
@@ -134,14 +139,24 @@ setup() {
 | 11 | bats `run` 会继承调用方 stdin：脚本内 `[ -t 0 ]` 自动判定在 TTY 终端跑测试时失真，非终端分支用例失败（clip 踩中） | 依赖 stdin 终端判定的用例必须显式固化前提，如 `run "$SCRIPT" < /dev/null`（见 test/wsl/clip.bats） |
 | 12 | git-bash 下 `command -v python3` 命中≠可执行：可能是 Windows Store 应用执行别名存根（真实退出 9009，MSYS `$?` 截断为 49、无输出），且 `-c` 内联代码/参数可能受 MSYS2 参数改写（jsonq Stage 3 回归踩中） | 解释器调用三件套：先健康探针（`"$py" -c 'import json'`，任何非零→退出 3 提示 `JSONQ_PYTHON`）+ 局部 `MSYS2_ARG_CONV_EXCL='*'` 传参 + 探针自带 `</dev/null`（见 jsonq `_jsonq_check_python`；该变量在非 MSYS 环境无副作用） |
 | 13 | git-bash 下 `JSONQ_PYTHON` 指向 Windows 本机 python（如 scoop）时，jsonq 中文错误消息乱码（ASCII 片段完好，形如 `jsonq: □Ƿ□ JSON`）：本机 python 对管道/重定向默认按系统 ANSI 代码页（中文 Windows = GBK/cp936）编码 stdout/stderr，中文经它写出变 GBK 字节，bats 按 UTF-8 比对失败；bash printf 输出（MSYS 程序 UTF-8 直写）不受影响 | 所有 python 调用统一加 `PYTHONUTF8=1` + `PYTHONIOENCODING=utf-8` 环境前缀，python 代码内 `sys.stdout/stderr.reconfigure(encoding="utf-8")` 双保险；Linux 下前缀无副作用（jsonq `run_query`/`_jsonq_check_python`；与 #12 同为"command -v 命中≠按预期工作"一族） |
-| 14 | git bash 全量测试慢（10-25 分钟量级）：MSYS 进程创建开销（每进程几十 ms，约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描逐个放大 | 脚本侧无法根治，做文档化：建议在 Windows 安全中心把仓库目录、Git 安装目录、python/scoop 安装目录加入排除项；git bash 侧 10 分钟量级属预期，**验收以用例结果为准，不追求速度**（README §4 同步；jsonq 另加 timeout 60 包装防个别 python 调用悬挂放大停顿） |
+| 14 | git bash 全量测试慢（10-25 分钟量级）：MSYS 进程创建开销（每进程几十 ms，约为 Linux 几十倍）× bats 全程数百次进程派生，叠加 Windows Defender 实时扫描逐个放大 | 脚本侧无法根治，做文档化：建议在 Windows 安全中心把仓库目录、Git 安装目录、python/scoop 安装目录加入排除项；git bash 侧 10 分钟量级属预期，**验收以用例结果为准，不追求速度**（README §4 同步；jsonq 另加 timeout 60 包装防个别 python 调用悬挂放大停顿）。深层机理/优化分级/基准方法已展开为 docs/test_performance.md；日常规避用变更驱动定向测试（scripts/dev/test-changed.sh） |
 
-## 10. 常用命令速查
+## 11. CI 演进备案（单一事实源）
+
+- **决策（2026-10-31）**：CI 保持全量（当前测试段约 1 分钟，定向收益约 50 秒，不值定向 CI 的边界漏测面）；定向测试只做在本地（提交门禁 bats-changed hook + `make test-changed` / `run_tests.sh --changed`）。
+- **升级触发条件**：CI 测试段 >10 分钟，或全量验证实际阻塞迭代节奏。
+- **切换路径**（届时约 30 分钟）：.github/workflows/tests.yml 改 `fetch-depth: 0`，测试步骤换成 `scripts/dev/test-changed.sh --run --base "$base"`——push 事件 base 取 `github.event.before`（两点 diff `event.before..HEAD` 覆盖多提交推送；`event.before` 为全零时回退全量），PR 事件 base 取 merge-base；lib/hooks/门禁基础设施变更由 helper 内建回退规则自动转全量。
+- **正交备案**：若届时只是少数脚本测试特别耗时（而非整体变多），优先考虑快慢分层（push 跑快层、scheduled/手动跑全层）而非 diff 定向。
+
+## 12. 常用命令速查
 
 ```bash
 make check         # lint + check-rules + test 全量
 make env-check     # 当前环境识别与版本区间判定
-./run_tests.sh     # 免 make 测试入口（git bash 用）
+make test-changed  # 只运行与变更文件对应的用例（本地定向）
+make test-one F=test/lib/env.bats   # 单文件重跑
+make bench-tests   # 测试基准计时（ARGS="--save 文件"）
+./run_tests.sh     # 免 make 测试入口（git bash 用；--changed 定向）
 make docs          # 重新生成 docs/SCRIPTS.md
 make doctor        # 打印工具链实测版本
 pre-commit run --all-files   # 手动全量门禁
